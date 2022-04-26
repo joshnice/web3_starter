@@ -40,4 +40,44 @@ describe("Blog", async function () {
     await blog.updateName('My new blog')
     expect(await blog.name()).to.equal("My new blog")
   })
+
+  it("Should create two different blog posts and then update the second name", async () => {
+    const Blog = await ethers.getContractFactory("Blog");
+    const blog = await Blog.deploy("My Blog");
+    await blog.deployed();
+
+    await blog.createPost("First post", "1");
+    await blog.createPost("Second post", "2");
+
+    const blogPosts = await blog.fetchPosts();
+    expect(blogPosts.length).to.equal(2);
+
+    await blog.updatePost(2, "Second Updated Post", "3", true);
+    const newBlogPosts = await blog.fetchPosts();
+    expect(newBlogPosts.length).to.equal(2);
+    expect(newBlogPosts[1].title).to.equal("Second Updated Post");
+  });
+
+  it("Should create two different contracts for the blog and add a blog post to each one", async () => {
+
+    const BlogContractFactory = await ethers.getContractFactory("Blog");
+    
+    const blogOne = await BlogContractFactory.deploy("Blog 1");
+    await blogOne.deployed();
+
+    const blogTwo = await BlogContractFactory.deploy("Blog 2");
+    await blogTwo.deployed();
+
+    await blogOne.updateName("Blog New One");
+
+    const blogOneName = await blogOne.name();
+    const blogTwoName = await blogTwo.name();
+
+    expect(blogOneName).to.equal("Blog New One");
+    expect(blogTwoName).to.equal("Blog 2");
+  });
+
+  // it("Should delete a blog post", async () => {
+
+  // });
 })
