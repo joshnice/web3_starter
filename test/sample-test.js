@@ -27,7 +27,7 @@ describe("Blog", async function () {
 
     await blog.updatePost(1, "My updated post", "23456", true)
 
-    posts = await blog.fetchPosts()
+    posts = await blog.fetchPosts();
     expect(posts[0].title).to.equal("My updated post")
   })
 
@@ -77,7 +77,47 @@ describe("Blog", async function () {
     expect(blogTwoName).to.equal("Blog 2");
   });
 
-  // it("Should delete a blog post", async () => {
+  it("Should throw an error as the id passed in does not exist", async () => {
 
-  // });
+      const BlogContractFactory = await ethers.getContractFactory("Blog");
+      let errorThrown = false;
+
+      const blog = await BlogContractFactory.deploy("Blog");
+      await blog.deployed();
+
+      await blog.createPost("Post one", "HashOne");
+      await blog.createPost("Post two", "HashTwo");
+      await blog.createPost("Post three", "HashThree");
+
+      try {
+        await blog.deletePost(4, "HashFour");
+      } catch (err) {
+        expect(err.message).to.equal("VM Exception while processing transaction: reverted with reason string 'Post does not exist'");
+        errorThrown = true;
+      }
+
+      expect(errorThrown).to.equal(true);
+  });
+
+  it("Should delete one of the three posts", async () => {
+
+    const BlogContractFactory = await ethers.getContractFactory("Blog");
+    let errorThrown = false;
+
+    const blog = await BlogContractFactory.deploy("Blog");
+    await blog.deployed();
+
+    await blog.createPost("Post one", "HashOne");
+    await blog.createPost("Post two", "HashTwo");
+    await blog.createPost("Post three", "HashThree");
+
+    await blog.deletePost(2, "HashTwo");
+
+    const posts = await blog.fetchPosts();
+
+    expect(posts.length).to.equal(2);
+    expect(posts[0].title).to.equal("Post one");
+    expect(posts[1].title).to.equal("Post three");
+
+});
 })

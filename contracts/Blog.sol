@@ -101,21 +101,30 @@ contract Blog {
             uint currentId = i + 1;
             Post storage currentItem = idToPost[currentId];
             if (!currentItem.deleted) {
-                posts[i] = currentItem;
+                posts[newPostIndex] = currentItem;
                 newPostIndex++;
             }
         }
+
         return posts;
     }
 
     function deletePost(uint postIdToDelete, string memory hash) public onlyOwner {
         
-        Post storage post = idToPost[postIdToDelete];
-
-        console.log("post id", post.id);
+        Post memory post = idToPost[postIdToDelete];
 
         if (post.id == 0) {
             revert("Post does not exist");
+        }
+
+        uint itemCount = _postIds.current();
+
+        for (uint index = 0; index < itemCount; index++) {
+            uint currentId = index + 1;
+            Post storage currentItem = idToPost[currentId];
+            if (currentItem.id == postIdToDelete) {
+                currentItem.deleted = true;
+            }
         }
 
         emit PostDeleted(postIdToDelete, hash);
