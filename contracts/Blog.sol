@@ -28,6 +28,8 @@ contract Blog {
     /* i.e. we can create listeners for events in the client and also use them in The Graph  */
     event PostCreated(uint id, string title, string hash);
     event PostUpdated(uint id, string title, string hash, bool published);
+    event PostDeleted(uint id, string hash);
+
 
     /* when the blog is deployed, give it a name */
     /* also set the creator as the owner of the contract */
@@ -87,6 +89,19 @@ contract Blog {
             posts[i] = currentItem;
         }
         return posts;
+    }
+
+    function deletePost(uint postIdToDelete, string memory hash) public onlyOwner {
+
+        Post storage post = idToPost[postIdToDelete];
+
+        console.log("post id", post.id);
+
+        if (post.id == 0) {
+            revert("Post does not exist");
+        }
+
+        emit PostDeleted(postIdToDelete, hash);
     }
 
     /* this modifier means only the contract owner can */
