@@ -18,6 +18,7 @@ contract Blog {
       string title;
       string content;
       bool published;
+      bool deleted;
     }
     /* mappings can be seen as hash tables */
     /* here we create lookups for posts by id and posts by ipfs hash */
@@ -62,6 +63,7 @@ contract Blog {
         post.id = postId;
         post.title = title;
         post.published = true;
+        post.deleted = false;
         post.content = hash;
         hashToPost[hash] = post;
         emit PostCreated(postId, title, hash);
@@ -69,7 +71,7 @@ contract Blog {
 
     /* updates an existing post */
     function updatePost(uint postId, string memory title, string memory hash, bool published) public onlyOwner {
-        Post storage post =  idToPost[postId];
+        Post storage post = idToPost[postId];
         post.title = title;
         post.published = published;
         post.content = hash;
@@ -82,17 +84,32 @@ contract Blog {
     function fetchPosts() public view returns (Post[] memory) {
         uint itemCount = _postIds.current();
 
-        Post[] memory posts = new Post[](itemCount);
+        // check amount of non deleted posts
+        uint notDeletedItems = 0;
         for (uint i = 0; i < itemCount; i++) {
             uint currentId = i + 1;
             Post storage currentItem = idToPost[currentId];
-            posts[i] = currentItem;
+            if (!currentItem.deleted) {
+                notDeletedItems++;
+            }
+        }
+
+        Post[] memory posts = new Post[](notDeletedItems);
+        uint newPostIndex = 0;
+
+        for (uint i = 0; i < itemCount; i++) {
+            uint currentId = i + 1;
+            Post storage currentItem = idToPost[currentId];
+            if (!currentItem.deleted) {
+                posts[i] = currentItem;
+                newPostIndex++;
+            }
         }
         return posts;
     }
 
     function deletePost(uint postIdToDelete, string memory hash) public onlyOwner {
-
+        
         Post storage post = idToPost[postIdToDelete];
 
         console.log("post id", post.id);
